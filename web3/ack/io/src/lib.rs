@@ -3,8 +3,8 @@
 use gear_lib::non_fungible_token::token::TokenMetadata;
 use gear_lib::non_fungible_token::{
     io::{NFTApproval, NFTTransfer, NFTTransferPayout},
-    state::NFTState,
     royalties::*,
+    state::NFTState,
     token::*,
 };
 use gmeta::{In, InOut, Metadata};
@@ -16,7 +16,7 @@ use primitive_types::H256;
 pub struct ContractMetadata;
 
 impl Metadata for ContractMetadata {
-    type Init = In<InitContract>;
+    type Init = ();
     type Handle = InOut<ContractAction, ContractEvent>;
     type Reply = ();
     type Others = ();
@@ -30,26 +30,14 @@ impl Metadata for ContractMetadata {
 pub enum ContractAction {
     Mint {
         transaction_id: u64,
-        token_metadata: TokenMetadata,
+        token_metadata: ContractTokenMetaData,
     },
-    TransferPayout {
-        transaction_id: u64,
-        to: ActorId,
-        token_id: TokenId,
-        amount: u128,
-    },
-    Approve {
-        transaction_id: u64,
-        to: ActorId,
+    AckAction {
+        user_wallet: ActorId,
+        role: String,
         token_id: TokenId,
     },
-    DelegatedApprove {
-        transaction_id: u64,
-        message: DelegatedApproveMessage,
-        signature: [u8; 64],
-    },
-    IsApproved {
-        to: ActorId,
+    Owner {
         token_id: TokenId,
     },
     Clear {
@@ -60,9 +48,9 @@ pub enum ContractAction {
 #[derive(Debug, Encode, Decode, TypeInfo)]
 #[codec(crate = gstd::codec)]
 #[scale_info(crate = gstd::scale_info)]
-pub struct InitContract {
-    pub seller_wallet: ActorId,
-    pub client_wallet: ActorId,
+pub struct ContractTokenMetaData {
+    client_wallet: ActorId,
+    seller_waller: ActorId,
 }
 
 #[derive(Encode, Decode, TypeInfo, Debug, Clone)]
@@ -70,18 +58,8 @@ pub struct InitContract {
 #[scale_info(crate = gstd::scale_info)]
 pub enum ContractEvent {
     Transfer(NFTTransfer),
-    TransferPayout(NFTTransferPayout),
-    NFTPayout(Payout),
-    Approval(NFTApproval),
-    Owner {
-        owner: ActorId,
-        token_id: TokenId,
-    },
-    IsApproved {
-        to: ActorId,
-        token_id: TokenId,
-        approved: bool,
-    },
+    AckAction(),
+    Owner { owner: ActorId, token_id: TokenId },
 }
 
 #[derive(Debug, Clone, Default, Encode, Decode, TypeInfo)]
@@ -99,6 +77,9 @@ pub struct IoContractState {
     pub seller: User,
     pub client: User,
     pub closed: bool,
+    pub owner_by_id: Vec<(TokenId, ActorId)>,
+    pub token_metadata_by_id: Vec<(TokenId, Option<TokenMetadata>)>,
+    pub tokens_for_owner: Vec<(ActorId, Vec<TokenId>)>,
 }
 
 pub struct IoContract {
@@ -114,11 +95,29 @@ pub struct ContractState {
 
 impl From<&ContractState> for IoContractState {
     fn from(value: &ContractState) -> Self {
-        let ContractState{
+        let ContractState {
             seller,
             client,
             closed,
+            owner_by_id,
+            token_metadata_by_id,
+            tokens_for_owner,
         } = value;
+
+        let owner_by_id = owner_by_id
+            .iter()
+            .map(|(hash, actor_id)| (*hash, *actor_id))
+            .collect();
+
+        let token_metadata_by_id = token_metadata_by_id
+            .iter()
+            .map(|(id, metadata)| (*id, metadata.clone()))
+            .collect();
+
+        let tokens_for_owner = tokens_for_owner
+            .iter()
+            .map(|(id, tokens)| (*id, tokens.clone()))
+            .collect();
 
         Self {
             seller: seller.clone(),
