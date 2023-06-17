@@ -3,6 +3,7 @@
 use gear_lib::non_fungible_token::token::TokenMetadata;
 use gear_lib::non_fungible_token::{
     io::{NFTApproval, NFTTransfer, NFTTransferPayout},
+    state::NFTState,
     royalties::*,
     token::*,
 };
@@ -101,4 +102,16 @@ pub struct IoContractState {
     pub transactions: Vec<(H256, ContractEvent)>,
 }
 
-pub struct ContractState {}
+impl From<&NFTState> for IoContractState {
+    fn from(value: &NFTState) -> Self {
+        seller,
+        client,
+        closed,
+    } = value;
+
+    Self {
+        seller: seller.clone(),
+        client: client.clone(),
+        closed: client.clone(),
+    }
+}
