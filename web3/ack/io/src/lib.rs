@@ -48,6 +48,13 @@ pub enum ContractAction {
 #[derive(Debug, Encode, Decode, TypeInfo)]
 #[codec(crate = gstd::codec)]
 #[scale_info(crate = gstd::scale_info)]
+pub struct InitContract {
+    pub name: String,
+}
+
+#[derive(Debug, Encode, Decode, TypeInfo)]
+#[codec(crate = gstd::codec)]
+#[scale_info(crate = gstd::scale_info)]
 pub struct ContractTokenMetaData {
     client_wallet: ActorId,
     seller_waller: ActorId,
@@ -74,6 +81,7 @@ pub struct User {
 #[codec(crate = gstd::codec)]
 #[scale_info(crate = gstd::scale_info)]
 pub struct IoContractState {
+    pub name: String,
     pub seller: User,
     pub client: User,
     pub closed: bool,
@@ -88,6 +96,7 @@ pub struct IoContract {
 }
 
 pub struct ContractState {
+    name: String,
     seller: User,
     client: User,
     closed: bool,
@@ -99,6 +108,7 @@ pub struct ContractState {
 impl From<&ContractState> for IoContractState {
     fn from(value: &ContractState) -> Self {
         let ContractState {
+            name,
             seller,
             client,
             closed,
@@ -123,6 +133,7 @@ impl From<&ContractState> for IoContractState {
             .collect();
 
         Self {
+            name: name.clone(),
             seller: seller.clone(),
             client: client.clone(),
             closed: *closed,
