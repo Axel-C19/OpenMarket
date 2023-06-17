@@ -99,19 +99,31 @@ pub struct IoContractState {
     pub seller: User,
     pub client: User,
     pub closed: bool,
+}
+
+pub struct IoContract {
+    pub handshake: IoContractState,
     pub transactions: Vec<(H256, ContractEvent)>,
 }
 
-impl From<&NFTState> for IoContractState {
-    fn from(value: &NFTState) -> Self {
-        seller,
-        client,
-        closed,
-    } = value;
+pub struct ContractState {
+    seller: User,
+    client: User,
+    closed: bool,
+}
 
-    Self {
-        seller: seller.clone(),
-        client: client.clone(),
-        closed: client.clone(),
+impl From<&ContractState> for IoContractState {
+    fn from(value: &ContractState) -> Self {
+        let ContractState{
+            seller,
+            client,
+            closed,
+        } = value;
+
+        Self {
+            seller: seller.clone(),
+            client: client.clone(),
+            closed: *closed,
+        }
     }
 }
