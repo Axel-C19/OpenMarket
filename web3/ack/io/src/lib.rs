@@ -91,6 +91,9 @@ pub struct ContractState {
     seller: User,
     client: User,
     closed: bool,
+    owner_by_id: Vec<(TokenId, ActorId)>,
+    token_metadata_by_id: Vec<(TokenId, Option<TokenMetadata>)>,
+    tokens_for_owner: Vec<(ActorId, Vec<TokenId>)>,
 }
 
 impl From<&ContractState> for IoContractState {
@@ -123,6 +126,9 @@ impl From<&ContractState> for IoContractState {
             seller: seller.clone(),
             client: client.clone(),
             closed: *closed,
+            owner_by_id,
+            token_metadata_by_id,
+            tokens_for_owner,
         }
     }
 }
